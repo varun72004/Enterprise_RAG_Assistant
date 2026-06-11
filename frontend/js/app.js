@@ -7,7 +7,7 @@
 // ── Constants & State ──────────────────────────────────────────
 
 /** @type {string} Base URL for API requests (empty = same origin) */
-const API_BASE = '';
+const API_BASE = 'https://pdf-ai-chatbot-backend-mcym.onrender.com';
 
 /** @type {number} Maximum file size in bytes (50 MB) */
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
