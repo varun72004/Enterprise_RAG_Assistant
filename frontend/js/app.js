@@ -21,6 +21,13 @@ let uploadedDocs = [];
 /** @type {boolean} Whether the assistant is currently streaming a response */
 let isStreaming = false;
 
+/** @type {string} Unique session ID for isolating this user's uploads and chat */
+let sessionId = sessionStorage.getItem('pdf_chat_session_id');
+if (!sessionId) {
+    sessionId = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
+    sessionStorage.setItem('pdf_chat_session_id', sessionId);
+}
+
 
 // ── DOM References ─────────────────────────────────────────────
 
@@ -237,6 +244,7 @@ function uploadFile(file) {
     });
 
     xhr.open('POST', `${API_BASE}/upload`);
+    xhr.setRequestHeader('X-Session-ID', sessionId);
     xhr.send(formData);
 }
 
@@ -257,7 +265,9 @@ function hideUploadProgress() {
  */
 async function refreshDocuments() {
     try {
-        const res = await fetch(`${API_BASE}/documents`);
+        const res = await fetch(`${API_BASE}/documents`, {
+            headers: { 'X-Session-ID': sessionId }
+        });
         if (!res.ok) throw new Error('Failed to fetch documents');
         const data = await res.json();
         uploadedDocs = data.documents || data || [];
@@ -324,6 +334,7 @@ async function deleteDocument(filename) {
     try {
         const res = await fetch(`${API_BASE}/document/${encodeURIComponent(filename)}`, {
             method: 'DELETE',
+            headers: { 'X-Session-ID': sessionId }
         });
         if (!res.ok) {
             const data = await res.json().catch(() => ({}));
@@ -366,7 +377,10 @@ async function sendMessage() {
     try {
         const response = await fetch(`${API_BASE}/chat`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-Session-ID': sessionId
+            },
             body: JSON.stringify({ question }),
         });
 
@@ -550,7 +564,10 @@ window.toggleSourceCards = toggleSourceCards;
  */
 async function clearChat() {
     try {
-        await fetch(`${API_BASE}/clear-chat`, { method: 'POST' });
+        await fetch(`${API_BASE}/clear-chat`, { 
+            method: 'POST',
+            headers: { 'X-Session-ID': sessionId }
+        });
     } catch (err) {
         console.warn('Backend clear-chat failed (may not be implemented):', err);
     }

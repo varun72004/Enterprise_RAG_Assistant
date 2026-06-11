@@ -38,6 +38,7 @@ def retrieve(
     query: str,
     top_k: int | None = None,
     use_hybrid: bool = True,
+    session_id: str | None = None,
 ) -> list[dict]:
     """Retrieve the most relevant document chunks for a query.
     
@@ -58,7 +59,8 @@ def retrieve(
     
     # Step 1: Vector similarity search
     query_embedding = embed_query(query)
-    results = vector_query(query_embedding, top_k=k * 2)  # Fetch more for reranking
+    filter_dict = {"session_id": session_id} if session_id else None
+    results = vector_query(query_embedding, top_k=k * 2, filter_dict=filter_dict)  # Fetch more for reranking
     
     if not results:
         logger.info("No results found for query.")

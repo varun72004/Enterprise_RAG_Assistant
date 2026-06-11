@@ -61,7 +61,11 @@ def add_documents(
     ids = [chunk.metadata["chunk_id"] for chunk in chunks]
     documents = [chunk.page_content for chunk in chunks]
     metadatas = [
-        {"page": chunk.metadata["page"], "pdf": chunk.metadata["pdf"]}
+        {
+            "page": chunk.metadata.get("page", 1), 
+            "pdf": chunk.metadata.get("pdf", ""),
+            "session_id": chunk.metadata.get("session_id", "")
+        }
         for chunk in chunks
     ]
     

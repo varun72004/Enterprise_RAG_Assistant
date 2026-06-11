@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Header
 
 from backend.config import get_settings
 from backend.models.schemas import (
@@ -52,7 +52,7 @@ def _sanitize_filename(filename: str) -> str:
 
 
 @router.post("/upload", response_model=UploadResponse)
-async def upload_pdf(file: UploadFile = File(...)):
+async def upload_pdf(file: UploadFile = File(...), x_session_id: str | None = Header(None)):
     """Upload a PDF file, extract text, chunk, embed, and store.
     
     Validates file type and size, then processes through the full
@@ -75,6 +75,9 @@ async def upload_pdf(file: UploadFile = File(...)):
     safe_filename = _sanitize_filename(file.filename)
     if not safe_filename.lower().endswith(".pdf"):
         safe_filename += ".pdf"
+        
+    if x_session_id:
+        safe_filename = f"{x_session_id}_{safe_filename}"
     
     # Read file content
     content = await file.read()
@@ -113,6 +116,13 @@ async def upload_pdf(file: UploadFile = File(...)):
         # Chunk
         chunks = chunk_document(pages, safe_filename)
         
+        # Inject session_id into chunk metadata for vector store isolation
+        if x_session_id:
+            for chunk in chunks:
+                chunk.metadata["session_id"] = x_session_id
+                # Remove prefix for display
+                chunk.metadata["pdf"] = safe_filename.replace(f"{x_session_id}_", "", 1)
+        
         # Embed
         texts = [chunk.page_content for chunk in chunks]
         embeddings = embed_texts(texts)
@@ -125,9 +135,11 @@ async def upload_pdf(file: UploadFile = File(...)):
             f"{len(pages)} pages, {len(chunks)} chunks"
         )
         
+        display_name = safe_filename.replace(f"{x_session_id}_", "", 1) if x_session_id else safe_filename
+        
         return UploadResponse(
             status="success",
-            filename=safe_filename,
+            filename=display_name,
             pages_extracted=len(pages),
             chunks_created=len(chunks),
         )
@@ -143,7 +155,7 @@ async def upload_pdf(file: UploadFile = File(...)):
 
 
 @router.get("/documents", response_model=DocumentListResponse)
-async def list_uploaded_documents():
+async def list_uploaded_documents(x_session_id: str | None = Header(None)):
     """List all uploaded and processed PDF documents."""
     settings = get_settings()
     documents: list[DocumentInfo] = []
@@ -151,6 +163,9 @@ async def list_uploaded_documents():
     stored_pdfs = list_documents()
     
     for filename in stored_pdfs:
+        if x_session_id and not filename.startswith(f"{x_session_id}_"):
+            continue
+            
         filepath = settings.upload_path / filename
         
         file_size_mb = 0.0
@@ -165,8 +180,10 @@ async def list_uploaded_documents():
         
         chunks = get_chunks_for_document(filename)
         
+        display_name = filename.replace(f"{x_session_id}_", "", 1) if x_session_id else filename
+        
         documents.append(DocumentInfo(
-            filename=filename,
+            filename=display_name,
             pages=pages,
             chunks=chunks,
             uploaded_at=uploaded_at,
@@ -180,12 +197,14 @@ async def list_uploaded_documents():
 
 
 @router.delete("/document/{filename}")
-async def delete_document(filename: str):
+async def delete_document(filename: str, x_session_id: str | None = Header(None)):
     """Delete a PDF document and its associated vectors."""
     settings = get_settings()
     
     # Sanitize
     safe_filename = _sanitize_filename(filename)
+    if x_session_id:
+        safe_filename = f"{x_session_id}_{safe_filename}"
     
     # Delete from vector store
     deleted_chunks = delete_from_store(safe_filename)
@@ -200,8 +219,10 @@ async def delete_document(filename: str):
     if deleted_chunks == 0 and not file_deleted:
         raise HTTPException(status_code=404, detail=f"Document '{safe_filename}' not found.")
     
+    display_name = safe_filename.replace(f"{x_session_id}_", "", 1) if x_session_id else safe_filename
+    
     return {
         "status": "success",
-        "filename": safe_filename,
+        "filename": display_name,
         "chunks_deleted": deleted_chunks,
     }

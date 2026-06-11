@@ -1,7 +1,7 @@
 """Chat and conversation routes."""
 
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from fastapi.responses import StreamingResponse
 
 from backend.config import get_settings
@@ -14,12 +14,12 @@ from backend.database.vector_store import get_document_count, is_healthy as chro
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# In-memory chat history (per server session)
-_chat_history: list[dict] = []
+# In-memory chat history (partitioned by session_id)
+_chat_history: dict[str, list[dict]] = {}
 
 
 @router.post("/chat")
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, x_session_id: str | None = Header(None)):
     """Process a chat question and stream the answer.
     
     Retrieves relevant context from uploaded documents,
@@ -45,8 +45,8 @@ async def chat(request: ChatRequest):
             detail="No documents uploaded yet. Please upload a PDF first.",
         )
     
-    # Retrieve relevant chunks
-    chunks = retrieve(question)
+    # Retrieve relevant chunks, filtering by session
+    chunks = retrieve(question, session_id=x_session_id)
     
     if not chunks:
         raise HTTPException(
@@ -55,12 +55,13 @@ async def chat(request: ChatRequest):
         )
     
     # Add user message to history
-    _chat_history.append({"role": "user", "content": question})
+    session_key = x_session_id or "default"
+    _chat_history.setdefault(session_key, []).append({"role": "user", "content": question})
     
     # Stream the response
     async def event_generator():
         full_answer = []
-        async for event in stream_answer(question, chunks, _chat_history):
+        async for event in stream_answer(question, chunks, _chat_history[session_key]):
             yield event
             # Collect tokens for history
             import json as _json
@@ -74,7 +75,7 @@ async def chat(request: ChatRequest):
                 pass
         
         # Save assistant response to history
-        _chat_history.append({
+        _chat_history[session_key].append({
             "role": "assistant",
             "content": "".join(full_answer),
         })
@@ -91,10 +92,11 @@ async def chat(request: ChatRequest):
 
 
 @router.post("/clear-chat")
-async def clear_chat():
+async def clear_chat(x_session_id: str | None = Header(None)):
     """Clear the conversation history."""
-    global _chat_history
-    _chat_history = []
+    session_key = x_session_id or "default"
+    if session_key in _chat_history:
+        _chat_history[session_key] = []
     return {"status": "success", "message": "Chat history cleared."}
 
 
