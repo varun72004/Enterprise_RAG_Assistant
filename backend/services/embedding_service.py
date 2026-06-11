@@ -2,7 +2,18 @@
 
 from __future__ import annotations
 
+import os
+# Limit PyTorch memory usage for 512MB Free Tier constraints
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+
 import logging
+try:
+    import torch
+    torch.set_num_threads(1)
+except ImportError:
+    pass
+
 from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
