@@ -1,39 +1,29 @@
-"""Embedding service using Sentence Transformers."""
+"""Embedding service using FastEmbed (ONNX optimized, low memory)."""
 
 from __future__ import annotations
 
-import os
-# Limit PyTorch memory usage for 512MB Free Tier constraints
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["MKL_NUM_THREADS"] = "1"
-
 import logging
-try:
-    import torch
-    torch.set_num_threads(1)
-except ImportError:
-    pass
-
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 
 logger = logging.getLogger(__name__)
 
 # Module-level singleton
-_model: SentenceTransformer | None = None
-_MODEL_NAME = "all-MiniLM-L6-v2"
+_model: TextEmbedding | None = None
+_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 
-def get_model() -> SentenceTransformer:
-    """Get or initialize the sentence transformer model (singleton).
+def get_model() -> TextEmbedding:
+    """Get or initialize the fastembed model (singleton).
     
     Returns:
-        Loaded SentenceTransformer model.
+        Loaded TextEmbedding model.
     """
     global _model
     if _model is None:
-        logger.info(f"Loading embedding model: {_MODEL_NAME}")
-        _model = SentenceTransformer(_MODEL_NAME)
-        logger.info(f"Embedding model loaded. Dimension: {_model.get_embedding_dimension()}")
+        logger.info(f"Loading embedding model via fastembed: {_MODEL_NAME}")
+        # FastEmbed uses ONNX runtime, saving hundreds of MBs of RAM compared to PyTorch
+        _model = TextEmbedding(_MODEL_NAME)
+        logger.info("Embedding model loaded.")
     return _model
 
 
@@ -56,14 +46,10 @@ def embed_texts(texts: list[str], batch_size: int = 64) -> list[list[float]]:
     
     logger.info(f"Generating embeddings for {len(texts)} texts (batch_size={batch_size})")
     
-    embeddings = model.encode(
-        texts,
-        batch_size=batch_size,
-        show_progress_bar=False,
-        normalize_embeddings=True,
-    )
+    # fastembed.embed returns an iterable of numpy arrays
+    embeddings = list(model.embed(texts, batch_size=batch_size))
     
-    return embeddings.tolist()
+    return [e.tolist() for e in embeddings]
 
 
 def embed_query(query: str) -> list[float]:
@@ -76,5 +62,6 @@ def embed_query(query: str) -> list[float]:
         Embedding vector as a list of floats.
     """
     model = get_model()
-    embedding = model.encode(query, normalize_embeddings=True)
-    return embedding.tolist()
+    # fastembed expects a list of strings
+    embeddings = list(model.embed([query]))
+    return embeddings[0].tolist()
