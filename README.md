@@ -1,8 +1,8 @@
 ---
 title: Enterprise RAG Assistant
 emoji: 🛡️
-colorFrom: cyan
-colorTo: indigo
+colorFrom: indigo
+colorTo: purple
 sdk: docker
 app_port: 7860
 ---
