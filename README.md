@@ -96,7 +96,7 @@ graph TD
 ## 🌐 Working Deployed Application
 
 > [!IMPORTANT]
-> **Deployed Application URL**: `http://your-public-deployed-url.com` *(Candidate: Update this URL upon cloud deployment)*
+> **Deployed Application URL**: `https://varun7986-enterprise-rag-assistant.hf.space`
 
 ---
 
@@ -226,7 +226,7 @@ The ingestion layer was entirely decoupled. Uploads immediately return a Task ID
 
 - [x] **Architecture diagram**: Embedded in `README.md` via Mermaid.
 - [x] **Source code repository**: Fully implemented structure.
-- [ ] **Working deployed application/server link**: Placeholder added in `README.md` (Update upon cloud deployment).
+- [x] **Working deployed application/server link**: Deployed on Hugging Face Spaces ([Live App Link](https://varun7986-enterprise-rag-assistant.hf.space)).
 - [x] **API documentation**: Documented in `README.md` and dynamically generated at `/docs`.
 - [x] **Evaluation report**: Completed and documented in [evaluation_report.md](file:///c:/Users/Varun/Source/Repos/Projects/PDF%20-%20Based%20AI%20Chatbot%20Advance/evaluation_report.md).
 - [x] **Setup and execution instructions**: Documented in `README.md`.
