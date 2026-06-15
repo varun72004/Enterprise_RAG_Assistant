@@ -1,3 +1,12 @@
+---
+title: Enterprise RAG Assistant
+emoji: 🛡️
+colorFrom: cyan
+colorTo: indigo
+sdk: docker
+app_port: 7860
+---
+
 # Production-Grade RAG System
 
 A highly scalable, secure, and observable Retrieval-Augmented Generation (RAG) assistant built with FastAPI, LangChain, Celery, Redis, ChromaDB, and multiple LLM providers (OpenAI/Gemini).
