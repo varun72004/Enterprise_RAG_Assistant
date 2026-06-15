@@ -96,13 +96,14 @@ async def chat(request: ChatRequest, x_session_id: str | None = Header(None)):
                 context_str = "\n\n".join([f"[Source: {c['metadata'].get('source_file', 'Unknown')} | Page: {c['metadata'].get('page_number', '?')}]\n{c['text']}" for c in chunks])
                 
             # Yield pipeline stats
-            yield f"data: {json.dumps({
+            pipeline_data = {
                 'type': 'pipeline',
                 'retrieved_chunks': len(initial_results),
                 'reranked_chunks': len(reranked_results),
                 'compression_ratio': round(compression_ratio, 2),
                 'context_tokens': context_tokens
-            })}\n\n"
+            }
+            yield f"data: {json.dumps(pipeline_data)}\n\n"
             
             # Step 4: Generating
             yield f"data: {json.dumps({'type': 'status', 'content': 'Generating Answer...'})}\n\n"
