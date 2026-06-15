@@ -18,12 +18,23 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o-mini"
     
-    # Chunking
-    CHUNK_SIZE: int = 800
-    CHUNK_OVERLAP: int = 150
+    # Gemini Fallback
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-1.5-flash"
     
-    # Retrieval
-    TOP_K_RESULTS: int = 5
+    # Chunking
+    CHUNK_SIZE: int = 1000
+    CHUNK_OVERLAP: int = 200
+    
+    # Embedding & Retrieval
+    EMBEDDING_MODEL: str = "BAAI/bge-small-en-v1.5"
+    RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    TOP_K_RESULTS: int = 10  # Initial retrieval
+    TOP_K_RERANK: int = 3    # After reranking
+    
+    # Redis / Celery
+    REDIS_URL: str = "redis://localhost:6379/0"
+
     
     # Upload
     MAX_UPLOAD_SIZE_MB: int = 50

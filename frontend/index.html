@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="PDF AI Chatbot — Upload PDFs and ask intelligent questions with cited answers powered by AI.">
-    <title>PDF AI Chatbot — Intelligent Document Q&amp;A</title>
+    <meta name="description" content="Knowledge Intelligence Platform — Production RAG System for Enterprise document search and QA.">
+    <title>Enterprise RAG Assistant — Knowledge Intelligence Platform</title>
 
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -20,168 +20,726 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Application Styles -->
-    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="/static/css/styles.css?v=2.0.1">
+
+    <style>
+        /* Enterprise SaaS Layout Improvements */
+        body {
+            background-color: #050816 !important;
+            color: #e8eaed !important;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .app-layout {
+            height: 100vh !important;
+            overflow: hidden !important;
+        }
+
+        .main-workspace {
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            padding: 0.5rem 1rem 0.75rem 1rem !important;
+            gap: 0.5rem !important;
+        }
+
+        /* Top Metrics Bar Custom Card Styling */
+        .system-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding: 0 1rem;
+        }
+
+        .summary-card {
+            background: #0b1220;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .summary-card:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+
+        .summary-card .card-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.04);
+            flex-shrink: 0;
+        }
+
+        .summary-card .card-icon.cyan { color: #06b6d4; background: rgba(6, 182, 212, 0.1); }
+        .summary-card .card-icon.purple { color: #8b5cf6; background: rgba(139, 92, 246, 0.1); }
+        .summary-card .card-icon.success { color: #10b981; background: rgba(16, 185, 129, 0.1); }
+        .summary-card .card-icon.warning { color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+        .summary-card .card-icon.info { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+
+        .summary-card .card-details {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .summary-card .card-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9aa0a6;
+            margin-bottom: 0.1rem;
+        }
+
+        .summary-card .card-value {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 3 Panel Split Layout */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr 320px;
+            gap: 0.75rem;
+            flex-grow: 1 !important;
+            min-height: 0 !important;
+            height: auto !important;
+            padding: 0 1rem;
+            overflow: hidden;
+        }
+
+        @media (max-width: 1200px) {
+            .workspace-grid {
+                grid-template-columns: 280px 1fr 280px;
+            }
+        }
+
+        .workspace-panel {
+            background: #0b1220;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .panel-header {
+            padding: 0.6rem 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+        }
+
+        .panel-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin: 0;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        /* Document Repository (Left Panel) custom list */
+        .indexed-files-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .file-item-card {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            position: relative;
+        }
+
+        .file-item-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .file-item-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #ffffff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 170px;
+        }
+
+        .file-item-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+        }
+
+        .badge-type {
+            font-size: 0.6rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-weight: 700;
+            background: rgba(6, 182, 212, 0.1);
+            color: #06b6d4;
+            text-transform: uppercase;
+        }
+
+        .badge-status {
+            font-size: 0.6rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.15rem;
+        }
+
+        .badge-status.indexed { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .badge-status.processing { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; animation: spin-loader 2s linear infinite; }
+        .badge-status.failed { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+        .file-item-details {
+            font-size: 0.65rem;
+            color: #9aa0a6;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding-top: 0.35rem;
+            margin-top: 0.15rem;
+        }
+
+        .file-item-delete {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            opacity: 0.6;
+            cursor: pointer;
+            padding: 0.1rem 0.2rem;
+            font-size: 0.8rem;
+            transition: opacity 0.2s;
+        }
+
+        .file-item-delete:hover {
+            opacity: 1.0;
+        }
+
+        /* Center Panel Chat and Pipeline style overrides */
+        .panel-center {
+            position: relative !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            height: 100% !important;
+        }
+
+        .chat-messages-container {
+            flex-grow: 1 !important;
+            overflow-y: auto !important;
+            padding: 1rem !important;
+            padding-bottom: 1rem !important; /* Overwrite the 80px space */
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1rem !important;
+        }
+
+        .generation-status-bar {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            background: rgba(6, 182, 212, 0.06);
+            border-top: 1px solid rgba(6, 182, 212, 0.15);
+            font-size: 0.72rem;
+            color: #06b6d4;
+            font-weight: 500;
+        }
+
+        /* Retrieval Pipeline Panel */
+        .retrieval-pipeline-panel {
+            background: #111827;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0.4rem 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .pipeline-title {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .pipeline-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.58rem;
+            color: #9aa0a6;
+            gap: 0.2rem;
+            margin-bottom: 0.35rem;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.2rem 0.35rem;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .pipeline-node {
+            padding: 0.1rem 0.25rem;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-weight: 600;
+        }
+
+        .pipeline-node.active {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.3);
+            color: #06b6d4;
+        }
+
+        .pipeline-arrow {
+            color: rgba(255, 255, 255, 0.2);
+            font-weight: 700;
+        }
+
+        .pipeline-stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.35rem;
+        }
+
+        .pipeline-stat-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 3px;
+            padding: 0.2rem;
+            text-align: center;
+        }
+
+        .pipeline-stat-box span {
+            display: block;
+            font-size: 0.52rem;
+            color: #9aa0a6;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .pipeline-stat-box strong {
+            font-size: 0.7rem;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        /* Non-floating, perfectly visible chat input bar */
+        .query-bar-container {
+            position: relative !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: auto !important;
+            padding: 0.5rem 0.75rem !important;
+            background: #0b1220 !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+            z-index: 10 !important;
+            flex-shrink: 0 !important;
+            width: 100% !important;
+        }
+
+        .query-bar-inner {
+            background: #111827 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 4px !important;
+            padding: 0.25rem 0.4rem !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            box-shadow: none !important;
+        }
+
+        .query-input {
+            font-size: 0.72rem !important;
+        }
+
+        /* Right Panel Citations list style */
+        .attribution-cards-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .attribution-card {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            padding: 0.75rem;
+            font-size: 0.75rem;
+        }
+
+        .attribution-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding-bottom: 0.3rem;
+        }
+
+        .attr-filename {
+            font-weight: 600;
+            color: #06b6d4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 130px;
+        }
+
+        .attr-page {
+            font-size: 0.65rem;
+            color: #9aa0a6;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.05rem 0.25rem;
+            border-radius: 2px;
+        }
+
+        .attr-score-badge {
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            padding: 0.05rem 0.35rem;
+            border-radius: 3px;
+        }
+
+        .attribution-excerpt {
+            font-size: 0.68rem;
+            line-height: 1.4;
+            color: #d1d5db;
+        }
+
+        .attribution-excerpt mark {
+            background: rgba(6, 182, 212, 0.25);
+            color: #06b6d4;
+            border-radius: 2px;
+            padding: 0 0.15rem;
+        }
+
+        /* Minimal clean welcome screen */
+        .chat-welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 2rem;
+            color: #9aa0a6;
+        }
+
+        .welcome-robot {
+            font-size: 2rem;
+            color: #06b6d4;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-heading {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .welcome-sub {
+            font-size: 0.75rem;
+            max-width: 420px;
+            line-height: 1.4;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- ======================== HEADER ======================== -->
-    <header id="app-header">
-        <button id="sidebar-toggle" class="sidebar-toggle-btn" aria-label="Toggle sidebar">
-            <i class="bi bi-list"></i>
-        </button>
-        <div class="header-brand">
-            <i class="bi bi-cpu header-icon"></i>
-            <h1 class="header-title">PDF AI Chatbot</h1>
+    <!-- ======================== TOP NAVBAR ======================== -->
+    <nav class="top-navbar">
+        <div class="nav-left">
+            <div class="platform-logo" style="margin-left: 1.25rem;">
+                <i class="bi bi-shield-fill-check logo-icon text-cyan"></i>
+                <span class="logo-text">Enterprise RAG Assistant</span>
+            </div>
         </div>
-        <div class="header-badge">
-            <span class="badge-pill">AI Powered</span>
+
+        <div class="nav-center">
+            <div class="workspace-selector">
+                <i class="bi bi-layers-half text-cyan"></i>
+                <span class="workspace-name">Production Environment</span>
+                <i class="bi bi-chevron-down workspace-chevron"></i>
+            </div>
         </div>
-    </header>
+
+        <div class="nav-right">
+            <div class="health-indicator-wrapper">
+                <span class="health-dot status-healthy"></span>
+                <span class="health-text" style="font-size: 0.75rem;">System: Healthy</span>
+            </div>
+            
+            <div class="doc-counter-badge">
+                <i class="bi bi-file-earmark-text text-cyan"></i>
+                <span>Docs Indexed: <strong id="indexed-count-nav">0</strong></span>
+            </div>
+
+            <a href="/dashboard" class="nav-dashboard-btn" title="Open Observability Dashboard">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </nav>
 
     <!-- ======================== MAIN LAYOUT ======================== -->
     <div class="app-layout">
 
-        <!-- ==================== SIDEBAR ==================== -->
-        <aside id="sidebar">
-            <div class="sidebar-inner">
+        <!-- ==================== MAIN WORKSPACE ==================== -->
+        <main class="main-workspace">
 
-                <!-- Upload Section -->
-                <div class="sidebar-section">
-                    <h2 class="sidebar-heading">
-                        <i class="bi bi-cloud-arrow-up"></i>
-                        Upload Documents
-                    </h2>
+            <!-- ── TOP AREA: 5 Summary Metrics Cards ── -->
+            <div class="system-summary-grid">
+                <div class="summary-card">
+                    <div class="card-icon cyan"><i class="bi bi-file-earmark-text"></i></div>
+                    <div class="card-details">
+                        <span class="card-label">Indexed Documents</span>
+                        <h4 class="card-value" id="summary-docs-count">0</h4>
+                    </div>
+                </div>
 
-                    <div id="upload-area" class="upload-dropzone" role="button" tabindex="0" aria-label="Upload PDF files">
-                        <input type="file" id="file-input" accept=".pdf" multiple hidden>
-                        <div class="upload-dropzone-content">
-                            <i class="bi bi-file-earmark-pdf upload-icon"></i>
-                            <p class="upload-text">Drag &amp; drop PDFs here</p>
-                            <span class="upload-subtext">or click to browse</span>
-                        </div>
-                        <button id="upload-btn" class="btn-upload" type="button">
-                            <i class="bi bi-plus-lg"></i> Choose Files
-                        </button>
+                <div class="summary-card">
+                    <div class="card-icon purple"><i class="bi bi-grid-3x3-gap"></i></div>
+                    <div class="card-details">
+                        <span class="card-label">Vector Chunks</span>
+                        <h4 class="card-value" id="summary-chunks-count">0</h4>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-icon success"><i class="bi bi-cpu"></i></div>
+                    <div class="card-details">
+                        <span class="card-label">Embedding Model</span>
+                        <h4 class="card-value" style="font-size: 0.72rem;" title="BAAI/bge-small-en-v1.5">bge-small-en-v1.5</h4>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-icon warning"><i class="bi bi-cpu-fill"></i></div>
+                    <div class="card-details">
+                        <span class="card-label">Active LLM</span>
+                        <h4 class="card-value" style="font-size: 0.72rem;" title="GPT-4o-mini">GPT-4o-mini</h4>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-icon info"><i class="bi bi-server"></i></div>
+                    <div class="card-details">
+                        <span class="card-label">Fallback LLM</span>
+                        <h4 class="card-value" style="font-size: 0.72rem;" title="Gemini 1.5 Flash">Gemini Flash</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── CENTER AREA: 3 Columns ── -->
+            <div class="workspace-grid">
+                
+                <!-- Left Panel: Document Repository -->
+                <div class="workspace-panel panel-left">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="bi bi-database"></i> Document Repository</h2>
+                    </div>
+
+                    <!-- Dropzone -->
+                    <div id="upload-area" class="upload-dropzone" style="margin: 0.75rem; padding: 1.25rem 0.5rem; height: 110px;">
+                        <input type="file" id="file-input" accept=".pdf,.html,.htm,.csv" multiple hidden>
+                        <i class="bi bi-cloud-arrow-up upload-drop-icon" style="font-size: 1.5rem; margin-bottom: 0.25rem;"></i>
+                        <span class="upload-drop-text" style="font-size: 0.72rem;">Drag &amp; drop or <strong class="text-cyan">browse</strong></span>
+                        <span class="upload-drop-sub" style="font-size: 0.6rem; margin-top: 0.1rem;">PDF, HTML, CSV up to 50MB</span>
                     </div>
 
                     <!-- Upload Progress -->
-                    <div id="upload-progress" class="upload-progress-wrapper" style="display: none;">
-                        <div class="progress-label">
-                            <span class="progress-filename"></span>
-                            <span class="progress-percent">0%</span>
+                    <div id="upload-progress" class="upload-progress-wrapper" style="display: none; margin: 0 0.75rem 0.5rem 0.75rem; padding: 0.5rem;">
+                        <div class="progress-info">
+                            <span class="progress-filename" style="font-size: 0.65rem;">filename.pdf</span>
+                            <span class="progress-percent" style="font-size: 0.65rem;">0%</span>
                         </div>
-                        <div class="progress-track">
-                            <div id="upload-progress-bar" class="progress-fill" role="progressbar"
-                                 aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress-bar-track">
+                            <div id="upload-progress-bar" class="progress-bar-fill" style="width: 0%;"></div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Documents Section -->
-                <div class="sidebar-section sidebar-section-docs">
-                    <h2 class="sidebar-heading">
-                        <i class="bi bi-folder2-open"></i>
-                        Your Documents
-                        <span id="pdf-count" class="pdf-count-badge">0</span>
-                    </h2>
-                    <div id="pdf-list" class="pdf-list">
-                        <!-- Empty state shown by default -->
-                        <div class="pdf-list-empty" id="pdf-list-empty">
-                            <i class="bi bi-inbox"></i>
-                            <p>No PDFs uploaded yet</p>
-                            <span>Upload a document to get started</span>
+                    <!-- Indexed Files List -->
+                    <div class="indexed-files-section" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                        <div class="section-title" style="padding: 0.65rem 0.75rem; font-size: 0.72rem; font-weight: 700; color: #9aa0a6; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.01);">
+                            <span>INDEXED SOURCES</span>
+                            <span id="pdf-count" class="badge-pill bg-cyan-dim text-cyan">0</span>
                         </div>
-                        <!-- PDF items will be injected here -->
-                    </div>
-                </div>
-
-            </div>
-        </aside>
-
-        <!-- Sidebar overlay for mobile -->
-        <div id="sidebar-overlay" class="sidebar-overlay"></div>
-
-        <!-- ==================== MAIN CHAT AREA ==================== -->
-        <main id="chat-container" class="chat-container">
-
-            <!-- Scrollable messages area -->
-            <div id="chat-messages" class="chat-messages">
-
-                <!-- Welcome Screen (shown when no messages) -->
-                <div id="welcome-screen" class="welcome-screen">
-                    <div class="welcome-icon-wrapper">
-                        <i class="bi bi-robot welcome-icon"></i>
-                    </div>
-                    <h2 class="welcome-title">Welcome to PDF AI Chatbot</h2>
-                    <p class="welcome-subtitle">Upload a PDF and start asking questions — get intelligent, cited answers instantly.</p>
-
-                    <div class="feature-cards">
-                        <div class="feature-card">
-                            <div class="feature-card-icon">
-                                <i class="bi bi-cloud-arrow-up-fill"></i>
+                        <div id="pdf-list" class="indexed-files-list">
+                            <!-- Empty State -->
+                            <div class="pdf-list-empty" id="pdf-list-empty">
+                                <i class="bi bi-folder-symlink" style="font-size: 1.5rem;"></i>
+                                <p style="font-size: 0.75rem; margin: 0.25rem 0 0.15rem 0;">No documents uploaded</p>
+                                <span style="font-size: 0.6rem; text-align: center;">Upload files to feed the vector database</span>
                             </div>
-                            <h3 class="feature-card-title">Upload PDFs</h3>
-                            <p class="feature-card-desc">Drag &amp; drop or browse to upload your PDF documents securely.</p>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-card-icon">
-                                <i class="bi bi-chat-dots-fill"></i>
-                            </div>
-                            <h3 class="feature-card-title">Ask Questions</h3>
-                            <p class="feature-card-desc">Type natural language questions about your documents' content.</p>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-card-icon">
-                                <i class="bi bi-bookmark-check-fill"></i>
-                            </div>
-                            <h3 class="feature-card-title">Get Cited Answers</h3>
-                            <p class="feature-card-desc">Receive accurate answers with page-level source references.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Chat messages will be injected here -->
-
-                <!-- Typing Indicator -->
-                <div id="typing-indicator" class="typing-indicator" style="display: none;">
-                    <div class="typing-indicator-inner">
-                        <div class="typing-avatar">
-                            <i class="bi bi-cpu"></i>
+                <!-- Center Panel: Knowledge Assistant (Chat) -->
+                <div class="workspace-panel panel-center">
+                    <div class="panel-header d-flex align-items-center justify-content-between">
+                        <div>
+                            <h2 class="panel-title"><i class="bi bi-cpu"></i> Knowledge Assistant</h2>
                         </div>
-                        <div class="typing-dots">
-                            <span class="dot"></span>
-                            <span class="dot"></span>
-                            <span class="dot"></span>
+                        <button id="clear-btn" class="btn-clear-session" title="Reset current session context" style="padding: 0.25rem 0.5rem; font-size: 0.7rem; border-radius: 4px;">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset Session
+                        </button>
+                    </div>
+
+                    <!-- Conversations -->
+                    <div id="chat-messages" class="chat-messages-container">
+                        <!-- Welcome Screen -->
+                        <div id="welcome-screen" class="chat-welcome-screen">
+                            <div class="welcome-robot">
+                                <i class="bi bi-cpu-fill"></i>
+                            </div>
+                            <h3 class="welcome-heading">Knowledge Intelligence Engine</h3>
+                            <p class="welcome-sub">The system is ready. Ingest documents in the left repository panel, and dispatch queries. The RAG pipeline will execute retrieval, cross-encoder reranking, context compression, and generate answers with attribution.</p>
+                        </div>
+
+                        <!-- Typing Indicator -->
+                        <div id="typing-indicator" class="chat-typing-indicator" style="display: none;">
+                            <div class="typing-bubble">
+                                <div class="typing-avatar"><i class="bi bi-cpu"></i></div>
+                                <div class="typing-dots">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Response Generation Status -->
+                    <div id="generation-status-bar" class="generation-status-bar">
+                        <div class="spinner-border text-cyan spinner-border-sm" role="status" style="width: 0.85rem; height: 0.85rem; border-width: 0.15em;"></div>
+                        <span id="generation-status-text">Retrieving Documents...</span>
+                    </div>
+
+                    <!-- Retrieval Pipeline Panel -->
+                    <div class="retrieval-pipeline-panel">
+                        <div class="pipeline-title">
+                            <i class="bi bi-diagram-3-fill text-cyan"></i> Retrieval Pipeline Execution Flow
+                        </div>
+                        <div class="pipeline-flow">
+                            <div class="pipeline-node" id="pipeline-node-query">Query</div>
+                            <span class="pipeline-arrow">➔</span>
+                            <div class="pipeline-node" id="pipeline-node-retrieve">Top 10 Retrieval</div>
+                            <span class="pipeline-arrow">➔</span>
+                            <div class="pipeline-node" id="pipeline-node-rerank">Cross Rerank</div>
+                            <span class="pipeline-arrow">➔</span>
+                            <div class="pipeline-node" id="pipeline-node-compress">Context Compress</div>
+                            <span class="pipeline-arrow">➔</span>
+                            <div class="pipeline-node" id="pipeline-node-llm">LLM Response</div>
+                        </div>
+                        <div class="pipeline-stats-row">
+                            <div class="pipeline-stat-box">
+                                <span>Retrieved Chunks</span>
+                                <strong id="pipeline-retrieved">0</strong>
+                            </div>
+                            <div class="pipeline-stat-box">
+                                <span>Reranked Chunks</span>
+                                <strong id="pipeline-reranked">0</strong>
+                            </div>
+                            <div class="pipeline-stat-box">
+                                <span>Compression Ratio</span>
+                                <strong id="pipeline-ratio">1.00</strong>
+                            </div>
+                            <div class="pipeline-stat-box">
+                                <span>Context Tokens</span>
+                                <strong id="pipeline-tokens">0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Query Bar (Floating) -->
+                    <div class="query-bar-container" style="padding: 0.75rem 1rem;">
+                        <div class="query-bar-inner">
+                            <button class="query-action-btn" id="query-attach-btn" title="Quick upload file">
+                                <i class="bi bi-paperclip"></i>
+                            </button>
+                            <input type="text" id="message-input" class="query-input" placeholder="Ask questions across all indexed knowledge sources..." autocomplete="off">
+                            <button id="send-btn" class="query-send-btn" title="Dispatch search query">
+                                <i class="bi bi-arrow-right-short"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
 
-            </div>
+                <!-- Right Panel: Source Attribution -->
+                <div id="source-attribution" class="workspace-panel panel-attribution">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="bi bi-bookmark-check"></i> Source Attribution</h2>
+                    </div>
 
-            <!-- ==================== INPUT BAR ==================== -->
-            <div class="input-bar">
-                <div class="input-bar-inner">
-                    <input type="text"
-                           id="message-input"
-                           class="message-input"
-                           placeholder="Ask a question about your PDFs..."
-                           autocomplete="off"
-                           aria-label="Type your question">
-                    <button id="send-btn" class="btn-send" type="button" aria-label="Send message">
-                        <i class="bi bi-send-fill"></i>
-                    </button>
-                    <button id="clear-btn" class="btn-clear" type="button" aria-label="Clear chat">
-                        <i class="bi bi-trash3"></i>
-                    </button>
+                    <div id="attribution-list" class="attribution-cards-list">
+                        <!-- Default state -->
+                        <div class="attribution-empty">
+                            <i class="bi bi-shield-check text-cyan" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                            <p style="font-size: 0.75rem; font-weight: 600; margin: 0 0 0.15rem 0;">No query dispatched</p>
+                            <span style="font-size: 0.6rem; text-align: center; color: #9aa0a6;">Citations and similarity scores will populate when answer generates.</span>
+                        </div>
+                    </div>
                 </div>
+
             </div>
 
         </main>
 
     </div>
 
-    <!-- ======================== TOAST CONTAINER ======================== -->
-    <div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3" aria-live="polite" aria-atomic="true"></div>
+    <!-- Toast container for notifications -->
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
@@ -189,7 +747,6 @@
             crossorigin="anonymous"></script>
 
     <!-- Application Script -->
-    <script src="./js/app.js"></script>
-
+    <script src="/static/js/app.js?v=2.0.1"></script>
 </body>
 </html>

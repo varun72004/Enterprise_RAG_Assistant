@@ -1,4 +1,4 @@
-"""FastAPI application entry point for PDF AI Chatbot."""
+"""FastAPI application entry point for Production-Grade RAG Assistant."""
 
 import logging
 from contextlib import asynccontextmanager
@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from backend.config import get_settings
-from backend.routes import upload, chat
+from backend.routes import upload, chat, metrics
 
 # Configure logging
 logging.basicConfig(
@@ -26,43 +26,40 @@ async def lifespan(app: FastAPI):
     """Application lifespan handler for startup/shutdown."""
     # Startup
     logger.info("=" * 60)
-    logger.info("PDF AI Chatbot — Starting up...")
+    logger.info("Production RAG System — Starting up...")
     logger.info("=" * 60)
     
     settings = get_settings()
-    
-    # Ensure directories exist
     settings.upload_path
     settings.chroma_path
     
-    # Pre-load the embedding model
-    logger.info("Pre-loading embedding model...")
-    from backend.services.embedding_service import get_model
-    get_model()
+    # Pre-load models
+    logger.info("Pre-loading models...")
+    from backend.services.embedding_service import EmbeddingService
+    from backend.services.retrieval.reranker import RerankerService
+    EmbeddingService.get_model()
+    RerankerService.get_model()
     
     # Initialize ChromaDB
-    logger.info("Initializing ChromaDB...")
-    from backend.database.vector_store import get_collection
-    collection = get_collection()
+    from backend.database.vector_store import VectorStore
+    collection = VectorStore.get_collection()
     logger.info(f"ChromaDB ready. Existing chunks: {collection.count()}")
     
-    logger.info("=" * 60)
-    logger.info("PDF AI Chatbot — Ready!")
-    logger.info(f"Open http://localhost:8000 in your browser")
-    logger.info("=" * 60)
-    
+    logger.info("Ready!")
     yield
     
     # Shutdown
-    logger.info("PDF AI Chatbot — Shutting down...")
+    logger.info("Shutting down...")
 
 
 # Create FastAPI app
 app = FastAPI(
-    title="PDF AI Chatbot",
-    description="A RAG-powered chatbot for querying PDF documents.",
-    version="1.0.0",
+    title="Production-Grade RAG Assistant",
+    description="Scalable, enterprise-ready RAG application with PDF/HTML/CSV support, advanced retrieval, hallucination detection, and observability.",
+    version="2.0.0",
     lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 # CORS middleware
@@ -77,11 +74,13 @@ app.add_middleware(
 # Include API routes
 app.include_router(upload.router, tags=["Documents"])
 app.include_router(chat.router, tags=["Chat"])
+app.include_router(metrics.router, tags=["Observability"])
 
 # Mount frontend static files
 frontend_dir = Path(__file__).parent.parent / "frontend"
 if frontend_dir.exists():
     app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
+
 
 
 @app.get("/")
@@ -90,4 +89,13 @@ async def serve_frontend():
     index_path = frontend_dir / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path))
-    return {"message": "PDF AI Chatbot API is running. Frontend not found."}
+    return {"message": "Production RAG Assistant API is running. Frontend not found."}
+
+
+@app.get("/dashboard")
+async def serve_dashboard():
+    """Serve the observability metrics dashboard."""
+    dashboard_path = frontend_dir / "dashboard.html"
+    if dashboard_path.exists():
+        return FileResponse(str(dashboard_path))
+    return {"message": "Dashboard not found."}

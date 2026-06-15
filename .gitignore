@@ -35,3 +35,9 @@ uploads/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Redis data
+dump.rdb
+
+# Celery
+celerybeat-schedule

@@ -9,3 +9,9 @@ fastembed
 openai
 PyMuPDF
 python-multipart
+celery
+redis
+beautifulsoup4
+google-generativeai
+sentence-transformers
+sse-starlette

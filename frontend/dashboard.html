@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Observability Dashboard for Enterprise Knowledge Intelligence Platform.">
+    <title>Observability Dashboard — Enterprise RAG</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Google Fonts — Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Primary Style Inheritance -->
+    <link rel="stylesheet" href="/static/css/styles.css?v=2.0.1">
+
+    <style>
+        /* Dashboard overrides */
+        body {
+            overflow-y: auto !important;
+            height: auto !important;
+            padding: 1.5rem 0;
+            background-color: #050816 !important;
+            color: #e8eaed !important;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Metrics grid */
+        .metrics-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-kpi-card {
+            background: #0b1220;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .metric-kpi-card:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+
+        .metric-kpi-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+
+        .metric-kpi-icon.cyan { background: rgba(6, 182, 212, 0.1); color: #06b6d4; }
+        .metric-kpi-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        .metric-kpi-icon.success { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .metric-kpi-icon.warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .metric-kpi-icon.error { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+        .metric-kpi-details {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .metric-kpi-label {
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: #9aa0a6;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-kpi-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-top: 0.15rem;
+        }
+
+        .metric-kpi-value span {
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: #9aa0a6;
+            margin-left: 2px;
+        }
+
+        /* 3-column layout grid */
+        .dashboard-grid-row {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 1100px) {
+            .dashboard-grid-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dashboard-panel {
+            background: #0b1220;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 0.65rem;
+        }
+
+        .panel-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin: 0;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        /* Lists and metrics styles */
+        .telemetry-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.78rem;
+        }
+
+        .telemetry-item:last-child {
+            border-bottom: none;
+        }
+
+        .telemetry-label {
+            color: #9aa0a6;
+            font-weight: 500;
+        }
+
+        .telemetry-value {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .telemetry-value.success { color: #10b981; }
+        .telemetry-value.warning { color: #f59e0b; }
+        .telemetry-value.error { color: #ef4444; }
+
+        /* Security log entries */
+        .security-logs {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            padding-right: 0.25rem;
+        }
+
+        .security-log-card {
+            background: rgba(239, 68, 68, 0.03);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            border-radius: 4px;
+            padding: 0.5rem;
+            font-size: 0.68rem;
+        }
+
+        .security-log-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            color: #ef4444;
+            margin-bottom: 0.15rem;
+        }
+
+        .security-log-time {
+            color: #9aa0a6;
+            font-weight: 400;
+        }
+
+        .security-log-query {
+            color: #d1d5db;
+            word-break: break-all;
+        }
+
+        /* History Panel */
+        .history-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+
+        .history-card {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            padding: 0.85rem;
+        }
+
+        .history-query-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding-bottom: 0.25rem;
+        }
+
+        .query-number {
+            color: #8b5cf6;
+            text-transform: uppercase;
+        }
+
+        .query-timestamp {
+            color: #9aa0a6;
+        }
+
+        .history-question, .history-answer {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.72rem;
+            line-height: 1.45;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-answer {
+            margin-bottom: 0;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 0.4rem;
+            border-radius: 3px;
+        }
+
+        .history-question i, .history-answer i {
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .history-question .text-content {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .history-answer .text-content {
+            color: #d1d5db;
+        }
+
+        .history-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 1rem;
+            text-align: center;
+            color: #9aa0a6;
+        }
+
+        .history-empty i {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .history-empty p {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .chart-box {
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            padding: 0.75rem;
+            height: 220px;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .chart-box:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <!-- Header -->
+        <div class="panel-header d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3" style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div>
+                <h1 class="panel-title fs-4"><i class="bi bi-speedometer2 text-cyan"></i> Observability Dashboard</h1>
+                <span style="font-size:0.75rem; color:#9aa0a6;">RAG system execution metrics, telemetry, and evaluation logs</span>
+            </div>
+            <a href="/" class="btn-clear-session text-decoration-none" style="font-size:0.75rem; padding:0.4rem 0.75rem; border-radius:4px;">
+                <i class="bi bi-arrow-left"></i> Workspace Chat
+            </a>
+        </div>
+
+        <!-- 7 Metrics KPI Grid -->
+        <div class="metrics-summary-grid">
+            <div class="metric-kpi-card">
+                <div class="metric-kpi-icon cyan"><i class="bi bi-file-earmark-text"></i></div>
+                <div class="metric-kpi-details">
+                    <span class="metric-kpi-label">Docs Indexed</span>
+                    <h4 class="metric-kpi-value" id="docs-indexed">0</h4>
+                </div>
+            </div>
+
+            <div class="metric-kpi-card">
+                <div class="metric-kpi-icon purple"><i class="bi bi-grid-3x3-gap"></i></div>
+                <div class="metric-kpi-details">
+                    <span class="metric-kpi-label">Chunks Stored</span>
+                    <h4 class="metric-kpi-value" id="chunks-stored">0</h4>
+                </div>
+            </div>
+
+            <div class="metric-kpi-card">
+                <div class="metric-kpi-icon cyan"><i class="bi bi-chat-dots"></i></div>
+                <div class="metric-kpi-details">
+                    <span class="metric-kpi-label">Queries</span>
+                    <h4 class="metric-kpi-value" id="total-queries">0</h4>
+                </div>
+            </div>
+
+            <div class="metric-kpi-card">
+                <div class="metric-kpi-icon success"><i class="bi bi-search"></i></div>
+                <div class="metric-kpi-details">
+                    <span class="metric-kpi-label">Avg Retrieval</span>
+                    <h4 class="metric-kpi-value" id="avg-retrieval">0<span>ms</span></h4>
+                </div>
+            </div>
+
+            <div class="metric-kpi-card">
+                <div class="metric-kpi-icon purple"><i class="bi bi-lightning-charge"></i></div>
+                <div class="metric-kpi-details">
+                    <span class="metric-kpi-label">P95 Latency</span>
+                    <h4 class="metric-kpi-value" id="p95-latency">0<span>ms</span></h4>
+                </div>
+            </div>
+
+            <div class="metric-kpi-card">
+                <div class="metric-kpi-icon error"><i class="bi bi-exclamation-octagon"></i></div>
+                <div class="metric-kpi-details">
+                    <span class="metric-kpi-label">Error Rate</span>
+                    <h4 class="metric-kpi-value" id="error-rate">0.00%</h4>
+                </div>
+            </div>
+
+            <div class="metric-kpi-card">
+                <div class="metric-kpi-icon success"><i class="bi bi-cash-stack"></i></div>
+                <div class="metric-kpi-details">
+                    <span class="metric-kpi-label">Cost/Query</span>
+                    <h4 class="metric-kpi-value" id="cost-per-query">$0.00</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Section: 3 Columns -->
+        <div class="dashboard-grid-row">
+            
+            <!-- COLUMN 1: Evaluation Metrics & Security Panel -->
+            <div class="d-flex flex-column gap-3">
+                
+                <!-- Evaluation Metrics -->
+                <div class="dashboard-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="bi bi-graph-up-arrow text-cyan"></i> Evaluation Metrics</h2>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Retrieval Precision</span>
+                        <span class="telemetry-value success" id="eval-precision">0.0%</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Grounding Score</span>
+                        <span class="telemetry-value success" id="eval-grounding">0.0%</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Hallucination Rate</span>
+                        <span class="telemetry-value warning" id="eval-hallucination">0.0%</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Average Latency</span>
+                        <span class="telemetry-value" id="eval-avg-latency">0 ms</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">P95 Latency</span>
+                        <span class="telemetry-value" id="eval-p95-latency">0 ms</span>
+                    </div>
+                </div>
+
+                <!-- Security Panel -->
+                <div class="dashboard-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="bi bi-shield-lock-fill text-danger"></i> Security Observability</h2>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Injections Blocked</span>
+                        <span class="telemetry-value error" id="sec-injections">0</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Failed Requests</span>
+                        <span class="telemetry-value error" id="sec-failed">0</span>
+                    </div>
+                    
+                    <div class="security-logs" id="security-logs-container">
+                        <!-- Dynamic logs -->
+                        <div style="font-size:0.65rem; color:#9aa0a6; text-align:center; padding:1.5rem 0;">
+                            No security incidents logged.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Information -->
+                <div class="dashboard-panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="bi bi-server text-purple"></i> Model Information</h2>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Embedding Model</span>
+                        <span class="telemetry-value" style="font-size:0.65rem; font-weight:600;">bge-small-en-v1.5</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Reranker Model</span>
+                        <span class="telemetry-value" style="font-size:0.65rem; font-weight:600;">ms-marco-MiniLM-L-6-v2</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Primary LLM</span>
+                        <span class="telemetry-value" style="font-size:0.65rem; font-weight:600;">GPT-4o-mini</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Fallback LLM</span>
+                        <span class="telemetry-value" style="font-size:0.65rem; font-weight:600;">Gemini 1.5 Flash</span>
+                    </div>
+                    <div class="telemetry-item">
+                        <span class="telemetry-label">Vector Database</span>
+                        <span class="telemetry-value" style="font-size:0.65rem; font-weight:600;">ChromaDB Persistent</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COLUMN 2: System Health and Charts -->
+            <div class="dashboard-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="bi bi-activity text-cyan"></i> System Health &amp; Analytics</h2>
+                </div>
+                <div class="chart-box">
+                    <canvas id="latencyChart"></canvas>
+                </div>
+                <div class="chart-box">
+                    <canvas id="accuracyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- COLUMN 3: Recent Session Chat History (No Query Delete Button) -->
+            <div class="dashboard-panel">
+                <div class="panel-header d-flex justify-content-between align-items-center">
+                    <h2 class="panel-title"><i class="bi bi-chat-left-text text-purple"></i> Recent Session Queries</h2>
+                    <button id="refresh-history-btn" class="btn-refresh" title="Refresh history" style="border:none; background:transparent; color:#9aa0a6;">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+                
+                <div id="history-container" class="history-container">
+                    <!-- Dynamic chat pairs -->
+                    <div class="history-empty">
+                        <i class="bi bi-chat-square-quote"></i>
+                        <p>No recent interactions</p>
+                        <span style="font-size:0.65rem;">Session history logs will populate when chat messages are sent.</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        let sessionId = sessionStorage.getItem('pdf_chat_session_id') || 'default_session';
+        let latencyChartInstance = null;
+        let accuracyChartInstance = null;
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        async function fetchMetrics() {
+            try {
+                const res = await fetch('/metrics');
+                if (!res.ok) throw new Error('API error');
+                const data = await res.json();
+
+                // KPI Updates
+                document.getElementById('docs-indexed').textContent = data.documents_indexed ?? 0;
+                document.getElementById('chunks-stored').textContent = data.vector_chunks ?? 0;
+                document.getElementById('total-queries').textContent = data.total_queries ?? 0;
+                
+                const avgRetrieval = Math.round(data.avg_retrieval_ms ?? 0);
+                document.getElementById('avg-retrieval').innerHTML = `${avgRetrieval}<span>ms</span>`;
+                
+                const p95Latency = Math.round(data.p95_latency_ms ?? 0);
+                document.getElementById('p95-latency').innerHTML = `${p95Latency}<span>ms</span>`;
+                
+                const errorRate = ((data.error_rate ?? 0) * 100).toFixed(1);
+                document.getElementById('error-rate').textContent = `${errorRate}%`;
+                
+                const cost = data.cost_per_query ?? 0.0;
+                document.getElementById('cost-per-query').textContent = `$${cost.toFixed(5)}`;
+
+                // Evaluation Panel Updates
+                const precision = ((data.retrieval_precision ?? 0) * 100).toFixed(1);
+                document.getElementById('eval-precision').textContent = `${precision}%`;
+
+                const grounding = ((data.grounding_score ?? 0) * 100).toFixed(1);
+                document.getElementById('eval-grounding').textContent = `${grounding}%`;
+
+                const hallucination = ((data.hallucination_rate ?? 0) * 100).toFixed(1);
+                document.getElementById('eval-hallucination').textContent = `${hallucination}%`;
+
+                document.getElementById('eval-avg-latency').textContent = `${Math.round(data.avg_latency_ms ?? 0)} ms`;
+                document.getElementById('eval-p95-latency').textContent = `${p95Latency} ms`;
+
+                // Security Updates
+                document.getElementById('sec-injections').textContent = data.prompt_injections_blocked ?? 0;
+                document.getElementById('sec-failed').textContent = data.total_errors ?? 0;
+
+                // Security Logs Render
+                const logsContainer = document.getElementById('security-logs-container');
+                const logs = data.security_events || [];
+                if (logs.length === 0) {
+                    logsContainer.innerHTML = `
+                        <div style="font-size:0.65rem; color:#9aa0a6; text-align:center; padding:1.5rem 0;">
+                            No security incidents logged.
+                        </div>
+                    `;
+                } else {
+                    let html = '';
+                    logs.forEach(log => {
+                        html += `
+                            <div class="security-log-card">
+                                <div class="security-log-header">
+                                    <span>${escapeHTML(log.event)}</span>
+                                    <span class="security-log-time">${escapeHTML(log.timestamp.split(' ')[1])}</span>
+                                </div>
+                                <div class="security-log-query">Payload: "${escapeHTML(log.query)}"</div>
+                            </div>
+                        `;
+                    });
+                    logsContainer.innerHTML = html;
+                }
+
+                // Update charts
+                updateCharts(data);
+
+            } catch (err) {
+                console.error('Failed to fetch metrics:', err);
+            }
+        }
+
+        function updateCharts(data) {
+            const avgRetrieval = Math.round(data.avg_retrieval_ms ?? 0);
+            const avgGen = Math.round(data.avg_generation_ms ?? 0);
+            const avgLatency = Math.round(data.avg_latency_ms ?? 0);
+
+            const latencyCtx = document.getElementById('latencyChart').getContext('2d');
+            if (latencyChartInstance) {
+                latencyChartInstance.data.datasets[0].data = [avgRetrieval, avgGen, avgLatency];
+                latencyChartInstance.update();
+            } else {
+                latencyChartInstance = new Chart(latencyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Retrieval', 'Generation', 'Total Latency'],
+                        datasets: [{
+                            data: [avgRetrieval, avgGen, avgLatency],
+                            backgroundColor: [
+                                'rgba(6, 182, 212, 0.4)',
+                                'rgba(139, 92, 246, 0.4)',
+                                'rgba(16, 185, 129, 0.4)'
+                            ],
+                            borderColor: [
+                                '#06B6D4',
+                                '#8B5CF6',
+                                '#10B981'
+                            ],
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: {
+                                display: true,
+                                text: 'Latency Breakdown (ms)',
+                                color: '#e8eaed',
+                                font: { size: 11, family: 'Inter', weight: '600' }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#9aa0a6', font: { family: 'Inter', size: 9 } }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#9aa0a6', font: { family: 'Inter', size: 9 } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            const totalQueries = data.total_queries ?? 0;
+            const safeQueries = Math.max(0, totalQueries - (data.total_hallucinations ?? 0));
+            const hallucinations = data.total_hallucinations ?? 0;
+
+            const accuracyCtx = document.getElementById('accuracyChart').getContext('2d');
+            if (accuracyChartInstance) {
+                accuracyChartInstance.data.datasets[0].data = [safeQueries, hallucinations];
+                accuracyChartInstance.update();
+            } else {
+                accuracyChartInstance = new Chart(accuracyCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Grounded Answers', 'Hallucination Warning'],
+                        datasets: [{
+                            data: [safeQueries, hallucinations],
+                            backgroundColor: [
+                                'rgba(16, 185, 129, 0.4)',
+                                'rgba(245, 158, 11, 0.4)'
+                            ],
+                            borderColor: [
+                                '#10B981',
+                                '#F59E0B'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#9aa0a6', font: { family: 'Inter', size: 9 } }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Generation Fidelity Rate',
+                                color: '#e8eaed',
+                                font: { size: 11, family: 'Inter', weight: '600' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        async function fetchHistory() {
+            const container = document.getElementById('history-container');
+            try {
+                const res = await fetch('/history', {
+                    headers: { 'X-Session-ID': sessionId }
+                });
+                if (!res.ok) throw new Error('API error');
+                const data = await res.json();
+                const history = data.history || [];
+
+                if (history.length === 0) {
+                    container.innerHTML = `
+                        <div class="history-empty">
+                            <i class="bi bi-chat-square-quote"></i>
+                            <p>No recent interactions</p>
+                            <span style="font-size:0.65rem;">Session history logs will populate when chat messages are sent.</span>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                for (let i = 0; i < history.length; i += 2) {
+                    const userMsg = history[i];
+                    const assistantMsg = history[i + 1];
+
+                    if (userMsg && userMsg.role === 'user') {
+                        const question = userMsg.content;
+                        const answer = assistantMsg ? assistantMsg.content : 'Generating...';
+
+                        html += `
+                            <div class="history-card">
+                                <div class="history-query-header">
+                                    <span class="query-number">Query #${Math.floor(i / 2) + 1}</span>
+                                    <span class="query-timestamp">Active Session Log</span>
+                                </div>
+                                <div class="history-question">
+                                    <i class="bi bi-chat-left-text text-purple"></i>
+                                    <div class="text-content">${escapeHTML(question)}</div>
+                                </div>
+                                <div class="history-answer">
+                                    <i class="bi bi-cpu text-cyan"></i>
+                                    <div class="text-content">${escapeHTML(answer)}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                container.innerHTML = html;
+
+            } catch (err) {
+                console.error('Failed to fetch history:', err);
+            }
+        }
+
+        function checkSessionChange() {
+            const currentSession = sessionStorage.getItem('pdf_chat_session_id') || 'default_session';
+            if (currentSession !== sessionId) {
+                sessionId = currentSession;
+                fetchHistory();
+                fetchMetrics();
+            }
+        }
+
+        document.getElementById('refresh-history-btn').addEventListener('click', () => {
+            fetchHistory();
+            fetchMetrics();
+        });
+
+        // Init
+        fetchMetrics();
+        fetchHistory();
+
+        // Auto Poll
+        setInterval(checkSessionChange, 1000);
+        setInterval(fetchMetrics, 4000);
+    </script>
+</body>
+</html>
