@@ -315,6 +315,47 @@
         .chart-box:last-child {
             margin-bottom: 0;
         }
+
+        /* ---- Dashboard Responsive Breakpoints ---- */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem 0;
+            }
+
+            .dashboard-container {
+                padding: 0 0.75rem;
+            }
+
+            .metrics-summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-grid-row {
+                grid-template-columns: 1fr;
+            }
+
+            .history-container {
+                max-height: 350px;
+            }
+
+            .metric-kpi-value {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .metrics-summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-container {
+                padding: 0 0.5rem;
+            }
+
+            .chart-box {
+                height: 180px;
+            }
+        }
     </style>
 </head>
 <body>

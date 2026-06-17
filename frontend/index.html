@@ -123,12 +123,6 @@
             overflow: hidden;
         }
 
-        @media (max-width: 1200px) {
-            .workspace-grid {
-                grid-template-columns: 280px 1fr 280px;
-            }
-        }
-
         .workspace-panel {
             background: #0b1220;
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -580,8 +574,21 @@
                 </div>
             </div>
 
+            <!-- ── MOBILE TAB SWITCHER (hidden on desktop) ── -->
+            <div class="mobile-panel-tabs" id="mobile-panel-tabs">
+                <button class="mobile-tab-btn" id="tab-btn-docs" onclick="switchMobilePanel('docs')">
+                    <i class="bi bi-database"></i> Docs
+                </button>
+                <button class="mobile-tab-btn active" id="tab-btn-chat" onclick="switchMobilePanel('chat')">
+                    <i class="bi bi-cpu"></i> Chat
+                </button>
+                <button class="mobile-tab-btn" id="tab-btn-sources" onclick="switchMobilePanel('sources')">
+                    <i class="bi bi-bookmark-check"></i> Sources
+                </button>
+            </div>
+
             <!-- ── CENTER AREA: 3 Columns ── -->
-            <div class="workspace-grid">
+            <div class="workspace-grid" id="workspace-grid" data-active-panel="chat">
                 
                 <!-- Left Panel: Document Repository -->
                 <div class="workspace-panel panel-left">
@@ -748,5 +755,70 @@
 
     <!-- Application Script -->
     <script src="/static/js/app.js?v=2.0.1"></script>
+
+    <!-- Mobile Panel Switcher -->
+    <script>
+        function switchMobilePanel(panel) {
+            const grid = document.getElementById('workspace-grid');
+            if (grid) grid.setAttribute('data-active-panel', panel);
+
+            // Update tab button states
+            ['docs', 'chat', 'sources'].forEach(function(p) {
+                const btn = document.getElementById('tab-btn-' + p);
+                if (btn) {
+                    btn.classList.toggle('active', p === panel);
+                }
+            });
+
+            // Scroll to top of workspace when switching panels on mobile
+            const workspace = document.querySelector('.main-workspace');
+            if (workspace) workspace.scrollTop = 0;
+        }
+
+        // Auto-switch to chat tab if user sends a message (mobile UX improvement)
+        document.addEventListener('DOMContentLoaded', function() {
+            var sendBtn = document.getElementById('send-btn');
+            if (sendBtn) {
+                sendBtn.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        switchMobilePanel('chat');
+                    }
+                });
+            }
+
+            var msgInput = document.getElementById('message-input');
+            if (msgInput) {
+                msgInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && window.innerWidth <= 768) {
+                        switchMobilePanel('chat');
+                    }
+                });
+            }
+
+            // Auto-switch to sources when attribution updates (mobile UX)
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(m) {
+                    if (m.type === 'childList' && m.addedNodes.length > 0 && window.innerWidth <= 768) {
+                        var hasCards = document.querySelector('.attribution-card');
+                        if (hasCards) {
+                            // Don't auto-switch, just update the tab to show there's content
+                            var sourcesBtn = document.getElementById('tab-btn-sources');
+                            if (sourcesBtn && !sourcesBtn.querySelector('.tab-dot')) {
+                                var dot = document.createElement('span');
+                                dot.className = 'tab-dot';
+                                dot.style.cssText = 'width:5px;height:5px;border-radius:50%;background:#10b981;margin-left:3px;display:inline-block;';
+                                sourcesBtn.appendChild(dot);
+                            }
+                        }
+                    }
+                });
+            });
+
+            var attrList = document.getElementById('attribution-list');
+            if (attrList) {
+                observer.observe(attrList, { childList: true });
+            }
+        });
+    </script>
 </body>
 </html>
